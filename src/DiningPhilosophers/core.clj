@@ -1,21 +1,20 @@
-(ns DiningPhilosophers.core)
+(ns DiningPhilosophers.core
+	(:use [clojure.tools.cli :only [cli]]
+		  [clojure.data.json :only [json-str]])
+	(:gen-class))
 
-(defn now [] (.getTime (new java.util.Date)))
+(defn now [] (System/currentTimeMillis))
 
 (defn fork-ids [philo-id]
 	(sort [philo-id (mod (dec philo-id) 5)]))
 
 (defn get-forks [philo-id table] 
-	[(nth table (first (fork-ids philo-id))),
-	 (nth table (second (fork-ids philo-id)))] )
+	(map (fn [pos] (nth table pos)) (fork-ids philo-id)))
 
 (defn grab-forks [philo-id table]
-	(let [cur-forks (get-forks philo-id table)]
-		(if (= [nil nil] (map deref cur-forks))
-			(doseq [fork cur-forks]
-				(ref-set fork philo-id))
-			(throw (Exception. (str "Couldn't get forks"))))
-		table))
+	(doseq [fork (get-forks philo-id table)]
+		(ref-set fork philo-id))
+	table)
 
 (defn drop-forks [philo-id table]
 	(let [cur-forks (get-forks philo-id table)]
@@ -24,18 +23,45 @@
 				(ref-set fork nil)))
 		table))
 
-(defn eat [philo-id log duration]
-	(send log #(conj % (str "Philosopher " philo-id " eats for " duration " at " (now))))
+(defn action [action philo-id log duration]
+
+	(send-off log conj [(now) philo-id action duration])
 	(Thread/sleep duration))
 
-(defn think [philo-id log duration]
-	(send log #(conj % (str "Philosopher " philo-id " thinks for " duration " at " (now))))
-	(Thread/sleep duration))
+(def eat (partial action :eating))
+(def think (partial action :thinking))
 
-(defn one-philo-cycle [philo-id counter log table]
-	(dotimes [_  counter]
+(defn philosopher [philo-id numtimes log table]
+	(dotimes [_  numtimes]
 		(think philo-id log (rand-int 200))
 		(dosync 
 			(grab-forks philo-id table)
 			(eat philo-id log (rand-int 200))
 			(drop-forks philo-id table))))
+
+(defn dinner [philocount numtimes log]
+	(let [table (map ref (repeat philocount nil))]
+		(doall 
+			(pmap (fn [philo-id] 
+				(philosopher philo-id numtimes log table)) 
+				(range philocount)))))
+
+(defn run 
+  "Run the simulation and print the output"
+  [philocount times]
+	(let [log (agent [])]
+		  (println (str "Table of " philocount " philosophers, each eating " times " times" ))
+		  (dinner philocount times log)
+		  (Thread/sleep 1000)
+		  (println (json-str @log)))
+	(shutdown-agents))
+
+(defn -main [& args]
+	(let [[opts args banner]
+		 	(cli args
+			     ["-s" "--philocount" "number of philosophers/forks" :parse-fn #(Integer. %)] 
+			     ["-n" "--times" "number of iterations each philosopher eats" :parse-fn #(Integer. %)])]
+		(if
+	        (and (:philocount opts) (:times opts))
+      		(run (:philocount opts) (:times opts))
+      		(println banner))))

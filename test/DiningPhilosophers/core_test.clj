@@ -25,7 +25,7 @@
 			(dosync
 				(grab-forks 0 
 					(map ref [nil 2 2 nil nil]))))))
-	(is (= [nil 2 2 nil nil]
+	(is (= [1 1 2 nil nil]
 		(map deref
 			(dosync
 				(grab-forks 1 
@@ -43,45 +43,32 @@
 				(drop-forks 0 
 					(map ref [0 2 2 nil 0])))))))
 
-
 (deftest eat-logging 
 	(is 
-		(= "Philosopher 2 eats for 200"
+		(= [2 :eating 200]
 			(let [log (agent [])]
 				(eat 2 log 200)
-				(first @log)))))
+				(rest (first @log))))))
 
 (deftest think-test
 	(is 
-		(= "Philosopher 2 thinks for 150"
+		(= [2 :thinking 150]
 			(let [log (agent [])]
 				(think 2 log 150)
-				(first @log)))))
+				(rest (first @log))))))
 
-(deftest one-philo-cycle-test
+(deftest philosopher-test
 	(is
 		(= 20
 			(let [log (agent [])]
-				(one-philo-cycle 1 10 log (map ref (repeat 5 nil)))
-				(doseq [l @log] (println l))
+				(philosopher 1 10 log (map ref (repeat 5 nil)))
+				(Thread/sleep 1000)
 				(count @log)))))
 
-
-(deftest many-philo-cycle-test
+(deftest dinner-test
 	(is
 		(= 50
-			(let [table (map ref (repeat 5 nil))
-				    log (agent [])]
-				(doall 
-					(pvalues 
-						(one-philo-cycle 0 5 log table)
-						(one-philo-cycle 1 5 log table)
-						(one-philo-cycle 2 5 log table)
-						(one-philo-cycle 3 5 log table)
-						(one-philo-cycle 4 5 log table)))
-				(doseq [l @log] (println l))
+			(let [log (agent [])]
+				(dinner 5 5 log)
+				(Thread/sleep 1000)
 				(count @log)))))
-
-; (deftest logging
-; 	(is (= ["message"] (dolog log "")))
-; )

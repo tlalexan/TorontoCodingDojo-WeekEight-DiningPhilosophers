@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<script src="http://d3js.org/d3.v2.js"></script>
+<script src="http://underscorejs.org/underscore.js"></script>
+<body>
+</body>
+<script>
+	var data = [[1349327605084,0,"thinking",103],[1349327605085,4,"thinking",1],[1349327605084,3,"thinking",91],[1349327605084,1,"thinking",1],[1349327605084,2,"thinking",180],[1349327605087,1,"eating",87],[1349327605176,1,"thinking",179],[1349327605087,4,"eating",103],[1349327605192,4,"thinking",175],[1349327605192,0,"eating",39],[1349327605233,0,"thinking",8],[1349327605192,3,"eating",54],[1349327605247,3,"thinking",127],[1349327605266,2,"eating",25],[1349327605293,2,"thinking",47],[1349327605241,0,"eating",196],[1349327605439,0,"thinking",31],[1349327605439,4,"eating",17],[1349327605458,4,"thinking",163],[1349327605341,2,"eating",159],[1349327605502,2,"thinking",86],[1349327605502,1,"eating",21],[1349327605524,1,"thinking",88],[1349327605502,3,"eating",68],[1349327605571,3,"thinking",57],[1349327605589,2,"eating",0],[1349327605589,2,"thinking",84],[1349327605629,3,"eating",53],[1349327605683,3,"thinking",116],[1349327605545,0,"eating",139],[1349327605685,0,"thinking",115],[1349327605686,4,"eating",1],[1349327605687,4,"thinking",0],[1349327605687,4,"eating",37],[1349327605726,4,"thinking",148],[1349327605801,3,"eating",34],[1349327605836,3,"thinking",56],[1349327605686,1,"eating",166],[1349327605853,1,"thinking",41],[1349327605853,0,"eating",12],[1349327605867,0,"thinking",144],[1349327605875,4,"eating",82],[1349327605857,2,"eating",143],[1349327606002,2,"thinking",27],[1349327606002,1,"eating",13],[1349327606016,1,"thinking",115],[1349327606016,0,"eating",183],[1349327606002,3,"eating",199],[1349327606202,2,"eating",198],[1349327606402,1,"eating",120]]
+
+	function time(d) {
+		return _.first(d);
+	}
+
+	function philosopher(d) {
+		return _.first(_.rest(d));
+	}
+
+	function duration(d) {
+		return _.last(d);
+	}
+
+	function action(d) {
+		return _.first(_.rest(d, 2));
+	}
+
+	var height = 400;
+	var numberOfPhilosophers =  _.max( _.map( data, philosopher) ) + 1;
+
+	var minTime =  _.min( _.map(data,  time) );
+	var maxTime =  _.max( _.map( data,  time) );
+
+	var timeScale = d3.scale.linear()
+	    .domain([minTime, maxTime])
+	    .range([0, height]);
+
+	var actionScale =  d3.scale.category10()
+		.domain(_.uniq(_.map( data, action)));
+
+	var svg = d3.select("body")
+	    .append("svg:svg")
+	    .attr("class", "chart")
+	    .attr("width", numberOfPhilosophers * 30)
+	    .attr("height", height);
+
+	var rect = svg.selectAll("rect")
+    	.data(data)
+    	.enter()
+    	.append("rect");
+
+	rect.attr("x", function (d) { return philosopher(d) * 30; });
+	rect.attr("y", function (d) { return timeScale(time(d)); });
+	rect.attr("width", 20);
+	rect.attr("height", 
+		function (d) { return timeScale(time(d) + duration(d)) - timeScale(time(d)); });
+	rect.style("fill", function (d) { return actionScale(action(d)); });
+
+</script>
+</html>
