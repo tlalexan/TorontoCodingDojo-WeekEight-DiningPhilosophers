@@ -5,11 +5,11 @@
 
 (defn now [] (System/currentTimeMillis))
 
-(defn fork-ids [philo-id]
-	(sort [philo-id (mod (dec philo-id) 5)]))
+(defn fork-ids [philo-id tablesize]
+	(sort [philo-id (mod (dec philo-id) tablesize)]))
 
 (defn get-forks [philo-id table] 
-	(map (fn [pos] (nth table pos)) (fork-ids philo-id)))
+	(map (fn [pos] (nth table pos)) (fork-ids philo-id (count table))))
 
 (defn grab-forks [philo-id table]
 	(doseq [fork (get-forks philo-id table)]
@@ -24,7 +24,6 @@
 		table))
 
 (defn action [action philo-id log duration]
-
 	(send-off log conj [(now) philo-id action duration])
 	(Thread/sleep duration))
 

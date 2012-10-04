@@ -2,10 +2,10 @@
   (:use clojure.test
         DiningPhilosophers.core))
 
-; there are 5 philos.
 (deftest table-tests
-	(is (= [0 4] (fork-ids 0)))
-	(is (= [0 1] (fork-ids 1))))
+	(is (= [0 4] (fork-ids 0 5)))
+	(is (= [0 6] (fork-ids 0 7)))
+	(is (= [0 1] (fork-ids 1 5))))
 
 
 (deftest forks-test
@@ -15,6 +15,8 @@
 		(get-forks 1 [1 1 nil nil nil])))
 	(is (= [1 nil] 
 		(get-forks 2 [1 1 nil nil nil])))
+	(is (= [0 0] 
+		(get-forks 0 [0 2 2 nil nil nil 0])))
 	(is (= [1 nil] 
 		(map deref (get-forks 2 
 			[(ref 1) (ref 1) (ref nil) (ref nil) (ref nil)])))))
