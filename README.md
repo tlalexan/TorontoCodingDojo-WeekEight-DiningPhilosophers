@@ -1,6 +1,6 @@
 # DiningPhilosophers
 
-Solution to [Dining Philosophers]http://en.wikipedia.org/wiki/Dining_philosophers_problem 
+Solution to [Dining Philosophers](http://en.wikipedia.org/wiki/Dining_philosophers_problem) 
 written in Clojure  by the Toronto Coding Dojo.
 
 ## Usage
